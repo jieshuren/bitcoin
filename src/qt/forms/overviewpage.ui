@@ -241,6 +241,74 @@
         </widget>
        </item>
        <item>
+        <widget class="QFrame" name="frame_mining">
+         <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Raised</enum>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_mining">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_mining">
+            <item>
+             <widget class="QLabel" name="labelMiningTitle">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Mining</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_mining_controls">
+            <item>
+             <widget class="QPushButton" name="startMiningButton">
+              <property name="text">
+               <string>Start Mining</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="stopMiningButton">
+              <property name="text">
+               <string>Stop Mining</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="labelNumThreads">
+              <property name="text">
+               <string>Threads:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="numThreadsBox">
+              <property name="value">
+               <number>1</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="labelMiningStatus">
+            <property name="text">
+             <string>Not mining</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>

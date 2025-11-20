@@ -14,6 +14,7 @@ enum class ChainType {
     SIGNET,
     REGTEST,
     TESTNET4,
+    NEWCOIN,  // New chain type for custom cryptocurrency
 };
 
 std::string ChainTypeToString(ChainType chain);

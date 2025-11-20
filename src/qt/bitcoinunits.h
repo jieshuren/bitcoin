@@ -40,10 +40,10 @@ public:
       @note Source: https://en.bitcoin.it/wiki/Units . Please add only sensible ones
      */
     enum class Unit {
-        BTC,
-        mBTC,
-        uBTC,
-        SAT
+        HBC = 0,  // Hongbao Coin (main unit) - no decimals
+        mHBC = 1, // Not used, but kept for compatibility
+        uHBC = 2, // Not used, but kept for compatibility
+        hbc = 3   // Hongbao Coin base unit
     };
     Q_ENUM(Unit)
 

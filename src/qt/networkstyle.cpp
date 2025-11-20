@@ -22,6 +22,7 @@ static const struct {
     {ChainType::TESTNET4, QAPP_APP_NAME_TESTNET4, 70, 30},
     {ChainType::SIGNET, QAPP_APP_NAME_SIGNET, 35, 15},
     {ChainType::REGTEST, QAPP_APP_NAME_REGTEST, 160, 30},
+    {ChainType::NEWCOIN, QAPP_APP_NAME_DEFAULT, 0, 0},  // Hongbao Coin network style
 };
 
 // titleAddText needs to be const char* for tr()

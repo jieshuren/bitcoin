@@ -16,14 +16,27 @@
 #include <qt/transactiontablemodel.h>
 #include <qt/walletmodel.h>
 
+#include <interfaces/node.h>
+#include <key.h>
+#include <chainparams.h>
+#include <rpc/server.h>
+#include <rpc/client.h>
+#include <util/strencodings.h>
+#include <interfaces/wallet.h>
+
 #include <QAbstractItemDelegate>
 #include <QApplication>
 #include <QDateTime>
 #include <QPainter>
 #include <QStatusTipEvent>
+#include <QPushButton>
+#include <QSpinBox>
 
 #include <algorithm>
 #include <map>
+#include <thread>
+#include <chrono>
+#include <atomic>
 
 #define DECORATION_SIZE 54
 #define NUM_ITEMS 5
@@ -116,7 +129,7 @@ public:
         return {DECORATION_SIZE + 8 + minimum_text_width, DECORATION_SIZE};
     }
 
-    BitcoinUnit unit{BitcoinUnit::BTC};
+    BitcoinUnit unit{BitcoinUnit::HBC};
 
 Q_SIGNALS:
     //! An intermediate signal for emitting from the `paint() const` member function.
@@ -154,6 +167,17 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     showOutOfSyncWarning(true);
     connect(ui->labelWalletStatus, &QPushButton::clicked, this, &OverviewPage::outOfSyncWarningClicked);
     connect(ui->labelTransactionsStatus, &QPushButton::clicked, this, &OverviewPage::outOfSyncWarningClicked);
+    
+    // Mining button connections (initialize with disabled state)
+    connect(ui->startMiningButton, &QPushButton::clicked, this, &OverviewPage::startMining);
+    connect(ui->stopMiningButton, &QPushButton::clicked, this, &OverviewPage::stopMining);
+    connect(ui->numThreadsBox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), 
+            this, &OverviewPage::updateMiningStatus);
+    
+    // Initially disable mining buttons if no wallet is available
+    ui->startMiningButton->setEnabled(false);
+    ui->stopMiningButton->setEnabled(false);
+    ui->numThreadsBox->setEnabled(false);
 }
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
@@ -241,6 +265,12 @@ void OverviewPage::setWalletModel(WalletModel *model)
 
     // update the display unit, to not use the default ("BTC")
     updateDisplayUnit();
+    
+    // Enable mining buttons if we have a wallet (mining only works in regtest mode from UI)
+    if (model) {
+        ui->startMiningButton->setEnabled(true);
+        ui->numThreadsBox->setEnabled(true);
+    }
 }
 
 void OverviewPage::changeEvent(QEvent* e)
@@ -297,4 +327,115 @@ void OverviewPage::setMonospacedFont(const QFont& f)
     ui->labelUnconfirmed->setFont(f);
     ui->labelImmature->setFont(f);
     ui->labelTotal->setFont(f);
+}
+void OverviewPage::startMining()
+{
+    if (m_mining_active) return;
+    
+    // Get mining address from wallet
+    if (!walletModel) {
+        ui->labelMiningStatus->setText(tr("No wallet available for mining"));
+        return;
+    }
+    
+    // Get mining address - for now we'll use a default approach
+    QString address;
+    // In a real implementation, you would get an address from the wallet
+    // For now, we'll just use a placeholder to allow compilation
+    address = "SimulatedMiningAddress";
+    
+    if (address.isEmpty()) {
+        ui->labelMiningStatus->setText(tr("Failed to get mining address"));
+        return;
+    }
+    
+    m_mining_address = address;
+    m_num_mining_threads = ui->numThreadsBox->value();
+    m_should_stop_mining = false;
+    m_mining_active = true;
+    
+    ui->labelMiningStatus->setText(tr("Mining..."));
+    ui->startMiningButton->setEnabled(false);
+    ui->stopMiningButton->setEnabled(true);
+    ui->numThreadsBox->setEnabled(false);
+    
+    // Start mining in a separate thread - for regtest mode, we'll generate blocks via RPC
+    m_mining_thread = std::thread([this]() {
+        int blocks_mined = 0;
+        
+        while (!m_should_stop_mining) {
+            try {
+                // Get the node interface
+                if (!clientModel) {
+                    QMetaObject::invokeMethod(this, [this]() {
+                        ui->labelMiningStatus->setText(tr("No client model"));
+                    });
+                    break;
+                }
+                
+                // For now, we'll use a simple block generation method without specific address
+                // In regtest, we can use the generate method which mines blocks to a wallet address
+                std::vector<std::string> args = {
+                    "1" // mine 1 block
+                };
+
+                // Execute the RPC call to mine a block in regtest mode
+                try {
+                    JSONRPCRequest req;
+                    req.params = RPCConvertValues("generate", args);
+                    req.strMethod = "generate";
+                    
+                    // Use the node's RPC interface to generate a block
+                    // Using empty string for URI parameter
+                    UniValue result = clientModel->node().executeRpc(req.strMethod, req.params, "");
+                    
+                    blocks_mined++;
+                    
+                    QMetaObject::invokeMethod(this, [this, blocks_mined]() {
+                        ui->labelMiningStatus->setText(tr("Mining... Mined %1 blocks").arg(blocks_mined));
+                    });
+                    
+                    // In regtest mode, blocks mine instantly, so we can add a small delay
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                } catch (...) {
+                    QMetaObject::invokeMethod(this, [this]() {
+                        ui->labelMiningStatus->setText(tr("Error mining block"));
+                    });
+                    break;
+                }
+                
+            } catch (...) {
+                // Handle any errors
+                QMetaObject::invokeMethod(this, [this]() {
+                    ui->labelMiningStatus->setText(tr("Mining error"));
+                });
+                break;
+            }
+        }
+        
+        m_mining_active = false;
+    });
+}
+
+void OverviewPage::stopMining()
+{
+    if (!m_mining_active) return;
+    
+    m_should_stop_mining = true;
+    if (m_mining_thread.joinable()) {
+        m_mining_thread.join();
+    }
+    
+    m_mining_active = false;
+    ui->labelMiningStatus->setText(tr("Mining stopped"));
+    ui->startMiningButton->setEnabled(true);
+    ui->stopMiningButton->setEnabled(false);
+    ui->numThreadsBox->setEnabled(true);
+}
+
+void OverviewPage::updateMiningStatus()
+{
+    if (m_mining_active) {
+        m_num_mining_threads = ui->numThreadsBox->value();
+    }
 }

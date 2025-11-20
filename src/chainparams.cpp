@@ -133,6 +133,8 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
         ReadRegTestArgs(args, opts);
         return CChainParams::RegTest(opts);
     }
+    case ChainType::NEWCOIN:
+        return CChainParams::NewCoin(); // New coin support
     }
     assert(false);
 }

@@ -8,7 +8,11 @@
 #include <interfaces/wallet.h>
 
 #include <QWidget>
+#include <QThread>
+#include <QTimer>
 #include <memory>
+#include <thread>
+#include <atomic>
 
 class ClientModel;
 class TransactionFilterProxy;
@@ -65,6 +69,19 @@ private Q_SLOTS:
     void handleTransactionClicked(const QModelIndex &index);
     void updateAlerts(const QString &warnings);
     void setMonospacedFont(const QFont&);
+    
+    // Mining slots
+    void startMining();
+    void stopMining();
+    void updateMiningStatus();
+
+private:
+    // Mining related
+    bool m_mining_active{false};
+    int m_num_mining_threads{1};
+    std::thread m_mining_thread;
+    std::atomic<bool> m_should_stop_mining{false};
+    QString m_mining_address;
 };
 
 #endif // BITCOIN_QT_OVERVIEWPAGE_H

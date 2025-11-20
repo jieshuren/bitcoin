@@ -824,10 +824,11 @@ std::variant<ChainType, std::string> ArgsManager::GetChainArg() const
         return *chain_arg;
     }
     if (fRegTest) return ChainType::REGTEST;
-    if (fSigNet) return ChainType::SIGNET;
-    if (fTestNet) return ChainType::TESTNET;
-    if (fTestNet4) return ChainType::TESTNET4;
-    return ChainType::MAIN;
+        if (fSigNet) return ChainType::SIGNET;
+        if (fTestNet) return ChainType::TESTNET;
+        if (fTestNet4) return ChainType::TESTNET4;
+        if (GetBoolArg("-newcoin", false)) return ChainType::NEWCOIN;  // Support for new coin
+        return ChainType::NEWCOIN;  // Make Hongbao Coin the default network
 }
 
 bool ArgsManager::UseDefaultSection(const std::string& arg) const

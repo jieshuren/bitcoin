@@ -160,6 +160,7 @@ public:
     static std::unique_ptr<const CChainParams> Main();
     static std::unique_ptr<const CChainParams> TestNet();
     static std::unique_ptr<const CChainParams> TestNet4();
+    static std::unique_ptr<const CChainParams> NewCoin(); // New coin
 
 protected:
     CChainParams() = default;

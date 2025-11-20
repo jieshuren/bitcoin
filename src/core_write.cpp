@@ -25,15 +25,20 @@
 
 UniValue ValueFromAmount(const CAmount amount)
 {
-    static_assert(COIN > 1);
-    int64_t quotient = amount / COIN;
-    int64_t remainder = amount % COIN;
-    if (amount < 0) {
-        quotient = -quotient;
-        remainder = -remainder;
+    static_assert(COIN >= 1);
+    if (COIN > 1) {
+        int64_t quotient = amount / COIN;
+        int64_t remainder = amount % COIN;
+        if (amount < 0) {
+            quotient = -quotient;
+            remainder = -remainder;
+        }
+        return UniValue(UniValue::VNUM,
+                strprintf("%s%d.%08d", amount < 0 ? "-" : "", quotient, remainder));
+    } else {
+        // For Hongbao Coin where COIN = 1, we don't have fractional parts
+        return UniValue(UniValue::VNUM, strprintf("%s%d", amount < 0 ? "-" : "", amount));
     }
-    return UniValue(UniValue::VNUM,
-            strprintf("%s%d.%08d", amount < 0 ? "-" : "", quotient, remainder));
 }
 
 std::string FormatScript(const CScript& script)

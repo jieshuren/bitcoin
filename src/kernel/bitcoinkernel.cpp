@@ -765,22 +765,32 @@ btck_ChainParameters* btck_chain_parameters_create(const btck_ChainType chain_ty
 {
     switch (chain_type) {
     case btck_ChainType_MAINNET: {
-        return btck_ChainParameters::ref(const_cast<CChainParams*>(CChainParams::Main().release()));
+        auto params = CChainParams::Main();
+        // Transfer unique_ptr management to struct which will handle calling the destructor
+        return btck_ChainParameters::take(params.release());
     }
     case btck_ChainType_TESTNET: {
-        return btck_ChainParameters::ref(const_cast<CChainParams*>(CChainParams::TestNet().release()));
+        auto params = CChainParams::TestNet();
+        return btck_ChainParameters::take(params.release());
     }
     case btck_ChainType_TESTNET_4: {
-        return btck_ChainParameters::ref(const_cast<CChainParams*>(CChainParams::TestNet4().release()));
+        auto params = CChainParams::TestNet4();
+        return btck_ChainParameters::take(params.release());
     }
     case btck_ChainType_SIGNET: {
-        return btck_ChainParameters::ref(const_cast<CChainParams*>(CChainParams::SigNet({}).release()));
+        auto params = CChainParams::SigNet({});
+        return btck_ChainParameters::take(params.release());
     }
     case btck_ChainType_REGTEST: {
-        return btck_ChainParameters::ref(const_cast<CChainParams*>(CChainParams::RegTest({}).release()));
+        auto params = CChainParams::RegTest({});
+        return btck_ChainParameters::take(params.release());
+    }
+    case btck_ChainType_NEWCOIN: {  // New coin support
+        auto params = CChainParams::NewCoin();
+        return btck_ChainParameters::take(params.release());
     }
     }
-    assert(false);
+    return nullptr;
 }
 
 btck_ChainParameters* btck_chain_parameters_copy(const btck_ChainParameters* chain_parameters)

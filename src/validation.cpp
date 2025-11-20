@@ -1918,15 +1918,21 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate& active_chainstate, CTxM
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
-        return 0;
+    // For Hongbao Coin, set fixed subsidy of 1 HBC per block with no halving
+    if (consensusParams.nSubsidyHalvingInterval == 210000) { // Standard Bitcoin parameters
+        int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+        // Force block reward to zero when right shift is undefined.
+        if (halvings >= 64)
+            return 0;
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
-    nSubsidy >>= halvings;
-    return nSubsidy;
+        CAmount nSubsidy = 50 * COIN;
+        // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+        nSubsidy >>= halvings;
+        return nSubsidy;
+    } else { // Hongbao Coin or other custom coins with different halving interval
+        // Fixed subsidy of 1 HBC per block (for Hongbao Coin)
+        return 1 * COIN;
+    }
 }
 
 CoinsViews::CoinsViews(DBParams db_params, CoinsViewOptions options)

@@ -534,6 +534,101 @@ public:
 };
 
 /**
+ * NewCoin: A new cryptocurrency based on Bitcoin Core
+ */
+class CNewCoinParams : public CChainParams {
+public:
+    CNewCoinParams() {
+        m_chain_type = ChainType::NEWCOIN;  // Set to the new ChainType
+        consensus.signet_blocks = false;
+        consensus.signet_challenge.clear();
+        consensus.nSubsidyHalvingInterval = 150; // Use regtest value for Hongbao Coin
+        consensus.BIP34Height = 1; // Always active unless overridden
+        consensus.BIP34Hash = uint256();
+        consensus.BIP65Height = 1;  // Always active unless overridden
+        consensus.BIP66Height = 1;  // Always active unless overridden
+        consensus.CSVHeight = 1;    // Always active unless overridden
+        consensus.SegwitHeight = 0; // Always active unless overridden
+        consensus.MinBIP9WarningHeight = 0;
+        consensus.powLimit = uint256{"7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}; // Use regtest value
+        consensus.nPowTargetTimespan = 24 * 60 * 60; // one day
+        consensus.nPowTargetSpacing = 5; // 5 seconds per block for Hongbao Coin
+        consensus.fPowAllowMinDifficultyBlocks = true; // Use regtest value for easier mining
+        consensus.enforce_BIP94 = false;
+        consensus.fPowNoRetargeting = true; // Use regtest value
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].min_activation_height = 0; // No activation delay
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1815; // 90%
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].period = 2016;
+
+        // Deployment of Taproot (BIPs 340-342)
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = 1619222400; // April 24th, 2021
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1628640000; // August 11th, 2021
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].min_activation_height = 709632; // Approximately November 12th, 2021
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1815; // 90%
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].period = 2016;
+
+        consensus.nMinimumChainWork = uint256{"0000000000000000000000000000000000000000dee8e2a309ad8a9820433c68"};
+        consensus.defaultAssumeValid = uint256{"00000000000000000000611fd22f2df7c8fbd0688745c3a6c3bb5109cc2a12cb"}; // You can change this
+
+        /**
+         * The message start string is designed to be unlikely to occur in normal data.
+         * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
+         * a large 32-bit integer with any alignment.
+         */
+        pchMessageStart[0] = 0xc1;  // Hongbao coin message start
+        pchMessageStart[1] = 0x0b;  // Hongbao coin message start
+        pchMessageStart[2] = 0xb1;  // Hongbao coin message start
+        pchMessageStart[3] = 0x05;  // Hongbao coin message start
+        nDefaultPort = 18888;  // Hongbao coin port
+        nPruneAfterHeight = 100000;
+        m_assumed_blockchain_size = 1;  // Small initial size for Hongbao Coin
+        m_assumed_chain_state_size = 1;  // Small initial size for Hongbao Coin
+
+        const char* pszTimestamp = "Hongbao Coin Genesis - Red Envelope Cryptocurrency 2025";
+        const CScript genesisOutputScript = CScript() << "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f"_hex << OP_CHECKSIG;
+        genesis = CreateGenesisBlock(pszTimestamp, genesisOutputScript, 1296688602, 2, 0x207fffff, 1, 1 * COIN); // Using regtest-compatible parameters for Hongbao Coin
+        consensus.hashGenesisBlock = genesis.GetHash();
+
+        // Use same approach as regtest - no fixed seeds for Hongbao Coin
+        vFixedSeeds.clear(); //!< Hongbao Coin doesn't have any fixed seeds like regtest.
+        vSeeds.clear();
+        vSeeds.emplace_back("dummySeed.invalid.");
+
+        // Base58 prefixes for your new coin (you can customize these)
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,48); // Hongbao coin address prefix
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,18); // Hongbao coin script address prefix
+        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,176); // Hongbao coin private key prefix
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E}; // Standard BIP32 prefix
+        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4}; // Standard BIP32 prefix
+
+        bech32_hrp = "hb"; // Hongbao coin bech32 human-readable part
+
+        fDefaultConsistencyChecks = false;
+        m_is_mockable_chain = false;
+
+        m_assumeutxo_data = {
+            // No assumeutxo data for Hongbao Coin since it's a new chain
+        };
+
+        chainTxData = ChainTxData{
+            .nTime    = 1704067200,  // Start time for Hongbao Coin
+            .tx_count = 0,           // Initial transaction count for new chain
+            .dTxRate  = 0,           // Initial transaction rate for new chain
+        };
+
+        // Generated by headerssync-params.py on 2025-09-01.
+        m_headers_sync_params = HeadersSyncParams{
+            .commitment_period = 632,
+            .redownload_buffer_size = 15009, // 15009/632 = ~23.7 commitments
+        };
+    }
+};
+
+/**
  * Regression test: intended for private networks only. Has minimal difficulty to ensure that
  * blocks can be found instantly.
  */
@@ -694,6 +789,11 @@ std::unique_ptr<const CChainParams> CChainParams::TestNet4()
     return std::make_unique<const CTestNet4Params>();
 }
 
+std::unique_ptr<const CChainParams> CChainParams::NewCoin()
+{
+    return std::make_unique<const CNewCoinParams>();
+}
+
 std::vector<int> CChainParams::GetAvailableSnapshotHeights() const
 {
     std::vector<int> heights;
@@ -712,6 +812,7 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
     const auto testnet4_msg = CChainParams::TestNet4()->MessageStart();
     const auto regtest_msg = CChainParams::RegTest({})->MessageStart();
     const auto signet_msg = CChainParams::SigNet({})->MessageStart();
+    const auto newcoin_msg = CChainParams::NewCoin()->MessageStart(); // NewCoin message
 
     if (std::ranges::equal(message, mainnet_msg)) {
         return ChainType::MAIN;
@@ -723,6 +824,8 @@ std::optional<ChainType> GetNetworkForMagic(const MessageStartChars& message)
         return ChainType::REGTEST;
     } else if (std::ranges::equal(message, signet_msg)) {
         return ChainType::SIGNET;
+    } else if (std::ranges::equal(message, newcoin_msg)) { // Check for NewCoin
+        return ChainType::NEWCOIN; // Return the new ChainType
     }
     return std::nullopt;
 }
